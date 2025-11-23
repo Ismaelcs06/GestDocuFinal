@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Documentos{% endblock %}
+
+{% block content %}
+<div class="col-12">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">📄 Gestión de Documentos</h3>
+    <a href="{% url 'documentos:documento_create' %}" class="btn btn-primary btn-sm">
+      <i class="fa fa-plus me-1"></i> Nuevo Documento
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="card card-body shadow-sm mb-4">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label mb-1 fw-semibold">Palabra clave</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
+               placeholder="Buscar por nombre o palabra clave...">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-1 fw-semibold">Tipo</label>
+        <select name="tipo" class="form-select form-select-sm">
+          <option value="">Todos</option>
+          {% for t in tipos %}
+            <option value="{{ t.id }}" {% if tipo|default:'' == t.id|stringformat:'s' %}selected{% endif %}>
+              {{ t.nombre }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label mb-1 fw-semibold">Etapa procesal</label>
+        <select name="etapa" class="form-select form-select-sm">
+          <option value="">Todas</option>
+          {% for e in etapas %}
+            <option value="{{ e.id }}" {% if etapa|default:'' == e.id|stringformat:'s' %}selected{% endif %}>
+              {{ e.nombre }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label mb-1 fw-semibold">Desde</label>
+        <input type="date" name="desde" value="{{ desde }}" class="form-control form-control-sm">
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label mb-1 fw-semibold">Hasta</label>
+        <input type="date" name="hasta" value="{{ hasta }}" class="form-control form-control-sm">
+      </div>
+
+      <div class="col-12 text-end mt-2">
+        <a href="{% url 'documentos:documento_list' %}" class="btn btn-light btn-sm">Limpiar</a>
+        <button type="submit" class="btn btn-outline-primary btn-sm">
+          <i class="fa fa-filter me-1"></i> Aplicar filtros
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Orden y paginación -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div>
+      <form method="get" class="d-inline">
+        {% for key, val in request.GET.items %}
+          {% if key != 'ordenar' %}
+            <input type="hidden" name="{{ key }}" value="{{ val }}">
+          {% endif %}
+        {% endfor %}
+        <label class="form-label me-2 fw-semibold">Ordenar por:</label>
+        <select name="ordenar" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+          <option value="-fechaDoc" {% if ordenar == "-fechaDoc" %}selected{% endif %}>Fecha (más recientes)</option>
+          <option value="fechaDoc" {% if ordenar == "fechaDoc" %}selected{% endif %}>Fecha (más antiguos)</option>
+          <option value="nombreDocumento" {% if ordenar == "nombreDocumento" %}selected{% endif %}>Nombre A–Z</option>
+          <option value="-nombreDocumento" {% if ordenar == "-nombreDocumento" %}selected{% endif %}>Nombre Z–A</option>
+        </select>
+      </form>
+    </div>
+
+    <div>
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-primary me-1">Anterior</a>
+      {% endif %}
+      <span class="text-muted small">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-primary ms-1">Siguiente</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-responsive stack-xs stack-tight" style="--stack-label-w: 130px;">
+    <table class="table table-hover table-xs-compact align-middle shadow-sm">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Etapa</th>
+          <th>Carpeta</th>
+          <th>Fecha</th>
+          <th>Archivo</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documentos %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="fw-semibold">{{ doc.nombreDocumento }}</td>
+          <td>{{ doc.tipoDocumento.nombre }}</td>
+          <td>{{ doc.etapaProcesal.nombre|default:"—" }}</td>
+
+          <td>
+            <a href="{% url 'documentos:carpeta_detalle' doc.carpeta.id %}" class="text-decoration-none text-primary">
+              <i class="fa fa-folder text-warning me-1"></i>{{ doc.carpeta.nombre }}
+            </a>
+          </td>
+
+          <td>{{ doc.fechaDoc|date:"d/m/Y" }}</td>
+
+          <td>
+            {% if doc.rutaDocumento %}
+              <a href="{{ doc.rutaDocumento.url }}" target="_blank" class="btn btn-sm btn-outline-success me-1">
+                <i class="fa fa-file-pdf"></i>
+              </a>
+              <a href="{{ doc.rutaDocumento.url }}" download class="btn btn-sm btn-outline-secondary">
+                <i class="fa fa-download"></i>
+              </a>
+            {% else %}
+              <span class="text-muted">No adjunto</span>
+            {% endif %}
+          </td>
+
+          <td class="text-end">
+            <div class="btn-group">
+              <a href="{% url 'documentos:version_list' doc.id %}" class="btn btn-outline-info btn-sm">
+                <i class="fa fa-code-branch me-1"></i> Versiones
+              </a>
+              <a href="{% url 'documentos:documento_create' %}?editar={{ doc.id }}" class="btn btn-outline-warning btn-sm">
+                <i class="fa fa-edit me-1"></i> Editar
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-3">No se encontraron documentos.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

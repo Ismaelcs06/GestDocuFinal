@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load report_tags %}
+{% block title %}Generador de Reportes{% endblock %}
+
+{% block content %}
+<div class="col-12">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">
+      <i class="fa fa-file-alt text-primary me-2"></i> Generador de Reportes
+    </h3>
+    <!-- 🎤 Botón de voz -->
+    <button id="btnVoice" class="btn btn-outline-primary btn-sm">
+      <i class="fa fa-microphone"></i> Generar por voz
+    </button>
+  </div>
+
+  <form method="get" class="card card-body shadow-sm mb-4">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Modelo</label>
+        {{ form.modelo }}
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Buscar / Filtrar</label>
+        {{ form.filtros }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Ordenar por</label>
+        {{ form.ordenar_por }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Orden</label>
+        {{ form.orden }}
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <label class="form-label fw-semibold">Columnas a incluir</label>
+      <div class="form-control" style="max-height: 230px; overflow: auto;">
+        {{ form.columnas }}
+      </div>
+    </div>
+
+    <div class="mt-3 d-flex justify-content-end gap-2">
+      <a href="{% url 'reportes:builder' %}" class="btn btn-light btn-sm">Limpiar</a>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="fa fa-search me-1"></i> Generar
+      </button>
+    </div>
+  </form>
+
+  {% if data %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="small text-muted">Registros: {{ data|length }}</div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'reportes:export_html' %}?{{ export_query }}">
+        <i class="fa fa-globe me-1"></i> HTML
+      </a>
+      <a class="btn btn-outline-success btn-sm" href="{% url 'reportes:export_xlsx' %}?{{ export_query }}">
+        <i class="fa fa-file-excel me-1"></i> Excel
+      </a>
+      <a class="btn btn-outline-danger btn-sm" href="{% url 'reportes:export_pdf' %}?{{ export_query }}">
+        <i class="fa fa-file-pdf me-1"></i> PDF
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped align-middle shadow-sm">
+      <thead class="table-light">
+        <tr>
+          {% for col in columns %}<th>{{ col|capfirst }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          {% for col in columns %}
+          <td>{{ row|get_item:col }}</td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ columns|length }}" class="text-center text-muted py-3">No hay datos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 🎤 Script de reconocimiento e interpretación de voz -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnVoice");
+
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    btn.disabled = true;
+    btn.title = "Tu navegador no soporta reconocimiento de voz.";
+    return;
+  }
+
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "es-ES";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Escuchando...';
+    recognition.start();
+  });
+
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript.toLowerCase();
+    console.log("🎤 Comando de voz:", text);
+
+    // --- 1️⃣ Detectar modelo ---
+    let modelo = "";
+    if (text.includes("caso") || text.includes("expediente")) modelo = "caso";
+    else if (text.includes("documento")) modelo = "documento";
+
+    // --- 2️⃣ Detectar filtros comunes ---
+    let estado = "";
+    if (text.includes("abierto")) estado = "ABIERTO";
+    else if (text.includes("cerrado")) estado = "CERRADO";
+
+    let prioridad = "";
+    if (text.includes("alta")) prioridad = "ALTA";
+    else if (text.includes("media")) prioridad = "MEDIA";
+    else if (text.includes("baja")) prioridad = "BAJA";
+
+    // --- 3️⃣ Detectar formato de exportación ---
+    let exportType = "";
+    if (text.includes("excel")) exportType = "xlsx";
+    else if (text.includes("pdf")) exportType = "pdf";
+    else exportType = ""; // por defecto se mostrará en pantalla
+
+    // --- 4️⃣ Detectar columnas sugeridas ---
+    let columnas = [];
+    if (modelo === "caso") {
+      columnas = ["nroCaso", "tipoCaso", "estado", "prioridad", "fechaInicio"];
+    } else if (modelo === "documento") {
+      columnas = ["nombreDocumento", "tipoDocumento__nombre", "estado", "fechaDoc"];
+    }
+
+    // --- 5️⃣ Construir URL con filtros ---
+    let params = new URLSearchParams();
+    if (modelo) params.append("modelo", modelo);
+    if (estado) params.append("estado", estado);
+    if (prioridad) params.append("prioridad", prioridad);
+    columnas.forEach(c => params.append("columnas", c));
+
+    // --- 6️⃣ Redirigir a la acción adecuada ---
+    let base = "/reportes/";
+    if (exportType === "pdf") base += "export/pdf/";
+    else if (exportType === "xlsx") base += "export/xlsx/";
+
+    window.location.href = `${base}?${params.toString()}`;
+    btn.innerHTML = '<i class="fa fa-microphone"></i> Generar por voz';
+    btn.disabled = false;
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Error de reconocimiento:", event.error);
+    alert("No se pudo reconocer la voz. Intenta nuevamente.");
+    btn.innerHTML = '<i class="fa fa-microphone"></i> Generar por voz';
+    btn.disabled = false;
+  };
+});
+</script>
+
+{% endblock %}

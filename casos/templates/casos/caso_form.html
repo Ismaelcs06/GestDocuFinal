@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ caso|default_if_none:"Nuevo Caso" }}{% endblock %}
+
+{% block content %}
+<div class="col-lg-8 mx-auto">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="m-0">
+        {% if caso %}Editar Caso: {{ caso.nroCaso }}{% else %}Crear nuevo Caso{% endif %}
+      </h5>
+    </div>
+
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.nroCaso.label }}</label>
+            {{ form.nroCaso }}
+            {% for e in form.nroCaso.errors %}<small class="text-danger">{{ e }}</small>{% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.tipoCaso.label }}</label>
+            {{ form.tipoCaso }}
+            {% for e in form.tipoCaso.errors %}<small class="text-danger">{{ e }}</small>{% endfor %}
+          </div>
+
+          <div class="col-12 mb-3">
+            <label class="form-label fw-semibold">{{ form.descripcion.label }}</label>
+            {{ form.descripcion }}
+            {% for e in form.descripcion.errors %}<small class="text-danger">{{ e }}</small>{% endfor %}
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">{{ form.estado.label }}</label>
+            {{ form.estado }}
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">{{ form.prioridad.label }}</label>
+            {{ form.prioridad }}
+          </div>
+          <div class="col-md-2 mb-3">
+            <label class="form-label fw-semibold">{{ form.fechaInicio.label }}</label>
+            {{ form.fechaInicio }}
+          </div>
+          <div class="col-md-2 mb-3">
+            <label class="form-label fw-semibold">{{ form.fechaFin.label }}</label>
+            {{ form.fechaFin }}
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+          <a href="{% url 'casos:case_list' %}" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Cancelar
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-save me-1"></i>
+            {% if caso %}Guardar cambios{% else %}Guardar caso{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

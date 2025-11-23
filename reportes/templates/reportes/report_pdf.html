@@ -1,0 +1,38 @@
+{% load report_tags %}
+
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ titulo }}</title>
+  <style>
+    body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; }
+    h3 { margin: 0 0 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #999; padding: 6px; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h3>{{ titulo }}</h3>
+  <table>
+    <thead>
+      <tr>
+        {% for col in columns %}<th>{{ col|capfirst }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data %}
+      <tr>
+        {% for col in columns %}
+        <td>{{ row|get_item:col }}</td>
+        {% endfor %}
+      </tr>
+      {% empty %}
+      <tr><td colspan="{{ columns|length }}">Sin datos</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

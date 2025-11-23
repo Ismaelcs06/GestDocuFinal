@@ -1,0 +1,666 @@
+/* =========================
+   Sidebar layout (responsive)
+   ========================= */
+
+/* --- Variables básicas --- */
+:root {
+  --sidebar-w: 300px;
+  --bg-page: #fcfcfc;
+  --bg-sidebar: #fff;
+  --bg-hover: #fcfcfc;
+  --brand: #b59256;
+  --text: #000;
+  --text-soft: #8b8b8b;
+  --border: #efefef;
+
+  /* NUEVO: presets para “stacked tables” */
+  --stack-label-w: 120px;              /* ancho de la columna de etiquetas en móvil */
+  --stack-gap: .5rem;                  /* espacio entre etiqueta y valor */
+  --stack-padding: .6rem .75rem;       /* padding de cada “fila” en tarjeta */
+  --stack-radius: .5rem;               /* radio de la tarjeta */
+  --stack-shadow: 0 2px 8px rgba(0,0,0,.06);
+  --stack-label-color: #666;
+  --stack-row-divider: 1px solid #f0f0f0;
+  --stack-bg: #fff;
+}
+
+/* --- Base --- */
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, "Noto Sans", sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text);
+  position: relative;
+  margin: 0;
+  overflow-x: hidden; /* ✅ evita scroll horizontal */
+}
+
+/* Overlay (solo móvil/tablet) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s ease, visibility .25s ease;
+  z-index: 1000;
+}
+
+body.show-sidebar::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* =========================
+   SIDEBAR (mobile-first)
+   ========================= */
+aside.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-w);
+  height: 100dvh;
+  background: var(--bg-sidebar);
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform .35s cubic-bezier(0.23, 1, 0.32, 1), box-shadow .25s ease, width .25s ease;
+  box-shadow: none;
+  will-change: transform, width;
+}
+
+/* Mostrar (móvil/tablet) */
+.show-sidebar aside.sidebar {
+  transform: translateX(0);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, .12);
+}
+
+/* Contenedor interno */
+aside .side-inner {
+  height: 100%;
+  padding: 30px 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Profile */
+aside .profile {
+  text-align: center;
+  padding: 0 30px 30px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--border);
+}
+aside .profile img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 15px;
+}
+aside .profile .name {
+  font-size: 18px;
+  margin: 0 0 2px;
+}
+aside .profile small { color: #cfcfcf; }
+
+/* Nav */
+.nav-menu ul, .nav-menu li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-menu a {
+  display: block;
+  padding: 10px 30px;
+  color: var(--text-soft);
+  position: relative;
+  transition: padding-left .2s ease, background .2s ease, color .2s ease;
+}
+.nav-menu a:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.nav-menu a::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: var(--brand);
+  opacity: 0; visibility: hidden;
+  transition: width .2s ease, opacity .2s ease, visibility .2s ease;
+}
+.nav-menu a:hover::before {
+  width: 4px;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Activo */
+.nav-menu li.active > a {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.nav-menu li.active > a::before {
+  width: 4px;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Collapsibles */
+.nav-menu a.collapsible {
+  padding-right: 48px;
+}
+.nav-menu a.collapsible::after {
+  content: "\f105";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  right: 20px; top: 50%;
+  transform: translateY(-50%);
+  line-height: 1;
+  transition: transform .2s ease;
+}
+.nav-menu a.collapsible[aria-expanded="true"] {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.nav-menu a.collapsible[aria-expanded="true"]::before {
+  width: 4px; opacity: 1; visibility: visible;
+}
+.nav-menu a.collapsible[aria-expanded="true"]::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+/* =========================
+   MAIN CONTENT
+   ========================= */
+main {
+  width: 100%;
+  transition: transform .35s cubic-bezier(0.23, 1, 0.32, 1), margin-left .35s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform, margin-left;
+}
+
+.show-sidebar main {
+  transform: translateX(var(--sidebar-w));
+}
+
+/* =========================
+   DESKTOP (≥992px)
+   ========================= */
+@media (min-width: 992px) {
+  body::before { display: none; }
+
+  aside.sidebar {
+    transform: none !important;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, .06);
+    width: var(--sidebar-w);
+  }
+
+  main {
+    margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w)); /* ✅ evita scroll horizontal */
+    transform: none !important;
+  }
+}
+
+/* ======= Sidebar colapsable en escritorio ======= */
+@media (min-width: 992px) {
+  /* Cuando se colapsa */
+  body.sidebar-collapsed aside.sidebar {
+    width: 80px;
+    overflow: hidden; /* ✅ oculta texto fuera del ancho */
+  }
+
+  body.sidebar-collapsed main {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+  }
+
+  /* Oculta todo el texto y deja solo los iconos */
+  body.sidebar-collapsed .sidebar h3,
+  body.sidebar-collapsed .sidebar .profile h5,
+  body.sidebar-collapsed .sidebar .profile small,
+  body.sidebar-collapsed .sidebar .nav-menu button,
+  body.sidebar-collapsed .sidebar .nav-menu a {
+    font-size: 0; /* ✅ truco: oculta texto sin romper layout */
+  }
+
+  body.sidebar-collapsed .sidebar .nav-menu i {
+    font-size: 18px; /* ✅ íconos visibles y centrados */
+    margin: 0 auto;
+    display: block;
+    text-align: center;
+  }
+
+  /* Elimina padding lateral para centrar los iconos */
+  body.sidebar-collapsed .sidebar .nav-menu a,
+  body.sidebar-collapsed .sidebar .nav-menu button {
+    padding: 12px 0;
+  }
+
+  /* Ajusta la foto de perfil */
+  body.sidebar-collapsed .sidebar .profile img {
+    width: 40px;
+    height: 40px;
+  }
+
+  body.sidebar-collapsed .sidebar .profile {
+    padding: 10px 0;
+    border: none;
+  }
+
+  /* Oculta el título GestDocu */
+  body.sidebar-collapsed .sidebar h3 {
+    display: none;
+  }
+
+  /* Mantiene accesible el botón de toggle */
+  body.sidebar-collapsed #sidebarToggle {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+  }
+}
+
+/* =========================
+   Scrollbar / accesibilidad
+   ========================= */
+aside .side-inner {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
+}
+aside .side-inner::-webkit-scrollbar { width: 8px; }
+aside .side-inner::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+aside .side-inner::-webkit-scrollbar-track { background: transparent; }
+
+a, button { outline-offset: 2px; }
+
+/* Burger opcional */
+.burger {
+  width: 28px;
+  height: 32px;
+  position: relative;
+  cursor: pointer;
+  z-index: 1100;
+}
+.burger::before, .burger span, .burger::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: #000;
+  border-radius: 2px;
+  transition: top .2s ease, transform .2s ease, opacity .2s ease;
+}
+.burger::before { top: 6px; }
+.burger span { top: 15px; }
+.burger::after { top: 24px; }
+.burger.active span { opacity: 0; }
+.burger.active::before { top: 15px; transform: rotate(45deg); }
+.burger.active::after { top: 15px; transform: rotate(-45deg); }
+
+
+/* =========================
+   Submenús mejorados (hover + íconos)
+   ========================= */
+
+/* Estilo general para submenús */
+.nav-menu ul ul li a {
+  color: #dcdcdc;
+  font-size: 14px;
+  padding: 8px 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+}
+
+/* Hover de submenú (arregla el problema del texto blanco invisible) */
+.nav-menu ul ul li a:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* ✅ fondo translúcido oscuro */
+  color: var(--brand); /* naranja principal */
+  text-decoration: none;
+  padding-left: 45px; /* leve desplazamiento */
+}
+
+/* Íconos de los submenús */
+.nav-menu ul ul li i {
+  color: var(--brand);
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Margen visual entre bloques de menú principal */
+.nav-menu > li {
+  margin-bottom: 8px;
+}
+
+/* Animación de colapso suave en submenús */
+.collapse {
+  transition: height 0.3s ease, opacity 0.3s ease;
+}
+.collapse.show {
+  opacity: 1;
+}
+.collapse:not(.show) {
+  opacity: 0;
+}
+
+/* =========================
+   Transiciones de texto (opcional suave)
+   ========================= */
+.sidebar,
+.sidebar .nav-menu a,
+.sidebar .profile,
+.sidebar h3 {
+  transition: all 0.25s ease;
+}
+
+
+
+
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+
+
+/* PARTE RESPONSIVA MOVIL */
+
+
+
+/* ====== Breakpoint móvil/tablet (<992px) ====== */
+@media (max-width: 991.98px){
+  /* Sidebar un pelín más angosto en móviles pequeños */
+  :root { --sidebar-w: 260px; }
+
+  /* Menos padding para que quepa todo */
+  aside .side-inner{ padding: 20px 0; }
+  .nav-menu a{ padding: 10px 20px; }
+  .nav-menu ul ul li a{ padding: 8px 32px; }
+
+  /* Perfil más compacto */
+  aside .profile img{ width: 56px; height: 56px; }
+  aside .profile .name{ font-size: 16px; }
+}
+
+/* ====== Muy pequeños (≤360px) ====== */
+@media (max-width: 360px){
+  :root { --sidebar-w: 240px; }
+  .nav-menu a{ padding: 10px 16px; }
+  .nav-menu ul ul li a{ padding: 8px 24px; }
+}
+
+/* ====== Tablas/containers responsivos ====== */
+/* Si tienes tablas anchas, evita scroll horizontal global */
+.table-wrap, .table-responsive, .overflow-x-auto{
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Toggle siempre clicable por encima del overlay */
+#sidebarToggle{ position: relative; z-index: 1102; }
+
+/* Evita que el body “salte” cuando aparece el overlay */
+body.show-sidebar{ overflow: hidden; }
+
+/* Aumenta el área táctil de los ítems del menú en móvil */
+@media (max-width: 991.98px){
+  .nav-menu button.btn,
+  .nav-menu a{
+    min-height: 42px;
+  }
+}
+
+/* Opcional: header pegajoso si lo usas */
+.sticky-top-mobile{
+  position: sticky; top: 0; z-index: 1101;
+  background: #0b5ed7; /* cámbialo si tu topbar es verde */
+}
+
+
+.mobile-topbar{
+  position: sticky;
+  top: 0;
+  z-index: 1102;         /* por encima del overlay */
+  background: #111;      /* o el color de tu topbar */
+  padding: .5rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.mobile-topbar .btn { padding: .35rem .6rem; }
+
+
+
+/* PARA OCULTAR COLUMNAS */
+
+@media (max-width: 575.98px){ .col-hide-xs{ display:none !important; } }   /* <576 */
+@media (max-width: 767.98px){ .col-hide-sm{ display:none !important; } }   /* <768 */
+@media (max-width: 991.98px){ .col-hide-md{ display:none !important; } }   /* <992 */
+@media (max-width: 1199.98px){ .col-hide-lg{ display:none !important; } }  /* <1200 */
+
+
+/* Compacta padding y fuente en tablas en pantallas pequeñas */
+@media (max-width: 575.98px){
+  .table-xs-compact.table th,
+  .table-xs-compact.table td{ padding:.5rem .55rem; }
+  .table-xs-compact.table{ font-size:.93rem; }
+}
+
+/* Utilidades para texto en celdas */
+.td-nowrap{ white-space: nowrap; }                 /* evita salto */
+.td-wrap{ white-space: normal; word-break: break-word; }  /* permite salto */
+.td-truncate{
+  max-width: 220px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+/* Variante XS más agresiva (pantallas 360px) */
+@media (max-width:360px){
+  .td-truncate-xs{ max-width:160px; }
+}
+
+
+/* === Sidebar móvil: ocupa SIEMPRE todo el alto visible === */
+@media (max-width: 991.98px){
+  aside.sidebar{
+    position: fixed;
+    left: 0;
+    right: auto;
+    top: 0;
+    bottom: 0;            /* <- garantiza altura completa sin “hueco” */
+    width: var(--sidebar-w);
+    height: auto;         /* <- deja que top/bottom manden */
+    transform: translateX(-100%); /* cerrado */
+    will-change: transform;
+  }
+
+  /* Abierto */
+  body.show-sidebar aside.sidebar{
+    transform: translateX(0);
+    box-shadow: 10px 0 30px rgba(0,0,0,.12);
+  }
+
+  /* El scroll va dentro del panel, no en el body */
+  aside.sidebar .side-inner{
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  /* Mientras está abierto, bloquea el scroll del documento */
+  body.show-sidebar{
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+}
+
+
+/* =========================================================
+   UTILIDADES: Tablas en "modo tarjetas" SOLO en móvil
+   Cómo usar:
+   - Envuelve la tabla con: <div class="table-responsive stack-xs">…</div>
+   - Pon data-label en cada <td>: <td data-label="Fecha">…</td>
+   - Opcional: ajusta el ancho de la columna de etiquetas con --stack-label-w
+   ========================================================= */
+
+/* Valores por defecto (puedes sobreescribirlos por wrapper) */
+:root{
+  --stack-label-w: 120px;              /* ancho de la columna de etiquetas en móvil */
+  --stack-gap: .5rem;                  /* espacio entre etiqueta y valor */
+  --stack-padding: .6rem .75rem;       /* padding de cada "fila" en tarjeta */
+  --stack-radius: .5rem;               /* radio de la tarjeta */
+  --stack-shadow: 0 2px 8px rgba(0,0,0,.06);
+  --stack-label-color: #666;
+  --stack-row-divider: 1px solid #f0f0f0;
+  --stack-bg: #fff;
+}
+
+/* -------- Variante 1: apilar SOLO en <576px -------- */
+@media (max-width: 575.98px){
+  .stack-xs table thead{ display:none; }
+  .stack-xs table tbody tr{
+    display:block;
+    background: var(--stack-bg);
+    border-radius: var(--stack-radius);
+    box-shadow: var(--stack-shadow);
+    overflow: hidden;
+    margin-bottom: .75rem;
+  }
+  .stack-xs table tbody tr td{
+    display:grid;
+    grid-template-columns: var(--stack-label-w) 1fr;
+    gap: var(--stack-gap);
+    padding: var(--stack-padding);
+    border: 0 !important;
+    border-bottom: var(--stack-row-divider) !important;
+    white-space: normal;               /* permite saltos en textos largos */
+  }
+  .stack-xs table tbody tr td:last-child{ border-bottom: 0 !important; }
+  .stack-xs table tbody tr td::before{
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--stack-label-color);
+  }
+
+  /* Utilidades de alineación dentro de tarjetas */
+  .stack-xs .stack-actions{ display:flex; gap:.5rem; justify-content:flex-end; }
+  .stack-xs .stack-start{ justify-content:flex-start; }
+  .stack-xs .stack-center{ justify-content:center; }
+}
+
+/* -------- Variante 2: apilar en <768px (si la necesitas) -------- */
+@media (max-width: 767.98px){
+  .stack-sm table thead{ display:none; }
+  .stack-sm table tbody tr{
+    display:block;
+    background: var(--stack-bg);
+    border-radius: var(--stack-radius);
+    box-shadow: var(--stack-shadow);
+    overflow: hidden;
+    margin-bottom: .75rem;
+  }
+  .stack-sm table tbody tr td{
+    display:grid;
+    grid-template-columns: var(--stack-label-w) 1fr;
+    gap: var(--stack-gap);
+    padding: var(--stack-padding);
+    border: 0 !important;
+    border-bottom: var(--stack-row-divider) !important;
+    white-space: normal;
+  }
+  .stack-sm table tbody tr td:last-child{ border-bottom:0 !important; }
+  .stack-sm table tbody tr td::before{
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--stack-label-color);
+  }
+  .stack-sm .stack-actions{ display:flex; gap:.5rem; justify-content:flex-end; }
+  .stack-sm .stack-start{ justify-content:flex-start; }
+  .stack-sm .stack-center{ justify-content:center; }
+}
+
+/* -------- Extras opcionales -------- */
+
+/* Variante compacta: menos padding en tarjetas (añade 'stack-tight' al wrapper) */
+.stack-tight{
+  --stack-padding: .5rem .6rem;
+  --stack-gap: .4rem;
+}
+
+/* Sin sombra (añade 'stack-no-shadow' al wrapper) */
+.stack-no-shadow{
+  --stack-shadow: none;
+  border: 1px solid #eee;
+}
+
+/* Muy estrecho (≤360px): etiqueta un poco más angosta */
+@media (max-width:360px){
+  .stack-xs, .stack-sm{ --stack-label-w: 100px; }
+}
+
+/* ================================================
+   FIX tarjetas en móvil: evita texto "vertical"
+   ================================================ */
+
+/* Para stack-xs (≤575.98px) */
+@media (max-width: 575.98px){
+  /* La etiqueta tiene un mínimo razonable y la columna de valor sí puede crecer */
+  .stack-xs table tbody tr td{
+    grid-template-columns: minmax(90px, var(--stack-label-w)) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  /* En tarjetas NO truncamos ni forzamos nowrap */
+  .stack-xs .td-truncate,
+  .stack-xs .td-truncate-xs,
+  .stack-xs .td-nowrap{
+    white-space: normal !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Si usas stack-sm (<768px), aplica lo mismo ahí también */
+@media (max-width: 767.98px){
+  .stack-sm table tbody tr td{
+    grid-template-columns: minmax(90px, var(--stack-label-w)) minmax(0, 1fr);
+    align-items: start;
+  }
+  .stack-sm .td-truncate,
+  .stack-sm .td-truncate-xs,
+  .stack-sm .td-nowrap{
+    white-space: normal !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere;
+  }
+}
+
+
+/* En móvil NO se mueve el contenido cuando el sidebar está abierto */
+@media (max-width: 991.98px){
+  .show-sidebar main{
+    transform: none !important;
+  }
+}
+
+/* Bloqueo de scroll sin “salto” cuando el sidebar está abierto */
+.lock-scroll{
+  position: fixed;
+  width: 100%;
+  overflow: hidden;   /* redundante con tu .show-sidebar, pero ok */
+}

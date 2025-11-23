@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Bitácora del Sistema{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">📜 Bitácora del Sistema</h3>
+
+  <form method="get" class="row mb-3">
+    <div class="col-md-3">
+      <input type="text" name="usuario" class="form-control" placeholder="Buscar por usuario" value="{{ request.GET.usuario }}">
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="accion" class="form-control" placeholder="Buscar acción" value="{{ request.GET.accion }}">
+    </div>
+    <div class="col-md-3">
+      <input type="date" name="fecha" class="form-control" value="{{ request.GET.fecha }}">
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+  </form>
+
+  <!-- Tabla: compacta en XS + wrapper con scroll propio -->
+  <div class="table-responsive">
+    <table class="table table-striped table-hover table-xs-compact align-middle">
+      <thead class="thead-dark">
+        <tr>
+          <th class="td-nowrap">Fecha</th>
+          <th class="td-nowrap">Usuario</th>
+          <th>Acción</th>
+          <th class="col-hide-xs td-nowrap">IP</th>        <!-- oculto <576px -->
+          <th class="col-hide-xs">Detalle</th>             <!-- oculto <576px -->
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bitacoras %}
+        <tr>
+          <td class="td-nowrap">{{ b.fecha|date:"d/m/Y H:i" }}</td>
+          <td class="td-nowrap">{{ b.idUsuario.username }}</td>
+          <td class="td-wrap td-truncate td-truncate-xs">{{ b.login }}</td>
+          <td class="col-hide-xs td-nowrap">{{ b.ip }}</td>
+          <td class="col-hide-xs">
+            <!-- XS: solo icono; SM+: texto + icono -->
+            <a href="{% url 'seguridad:bitacora_detalle' b.id %}"
+               class="btn btn-sm btn-outline-info d-inline d-sm-none" title="Ver detalles">
+              <i class="fa-solid fa-circle-info"></i>
+            </a>
+            <a href="{% url 'seguridad:bitacora_detalle' b.id %}"
+               class="btn btn-sm btn-outline-info d-none d-sm-inline-flex">
+              <i class="fa-solid fa-circle-info me-1"></i> Ver detalles
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted">No hay registros de bitácora</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

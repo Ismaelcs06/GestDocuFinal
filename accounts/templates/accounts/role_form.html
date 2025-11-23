@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ accion }} Rol{% endblock %}
+
+{% block content %}
+<div class="col-lg-6 mx-auto">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="m-0">{{ accion }} Rol</h5>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{% url 'accounts:roles_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

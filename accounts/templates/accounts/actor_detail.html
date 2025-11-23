@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Detalle del Actor{% endblock %}
+
+{% block content %}
+<div class="col-lg-8 mx-auto">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="m-0">Detalle del Actor: {{ actor.nombres }} {{ actor.apellidoPaterno }}</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>Tipo:</strong> {{ actor.get_tipoActor_display }}</p>
+      <p><strong>CI:</strong> {{ actor.ci }}</p>
+      <p><strong>Teléfono:</strong> {{ actor.telefono|default:"—" }}</p>
+      <p><strong>Dirección:</strong> {{ actor.direccion|default:"—" }}</p>
+      <p><strong>Estado:</strong>
+        <span class="badge {% if actor.estadoActor == 'ACTIVO' %}bg-success{% else %}bg-secondary{% endif %}">
+          {{ actor.estadoActor }}
+        </span>
+      </p>
+      <p><strong>Usuario:</strong> {{ actor.usuario.username }}</p>
+
+      {% if datos_especificos %}
+        <hr>
+        <h6>Datos específicos de {{ tipo }}</h6>
+        <pre>{{ datos_especificos|safe }}</pre>
+      {% else %}
+        <p class="text-muted">No se han completado los datos específicos.</p>
+      {% endif %}
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="{% url 'accounts:actors_list' %}" class="btn btn-outline-secondary">Volver</a>
+      <a href="{% url 'accounts:actor_create' actor.usuario.id %}" class="btn btn-primary">Editar</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat con Asistente IA - GestDocSi2{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-sidebar {
+        width: 300px;
+        background: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        overflow-y: auto;
+    }
+    
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #ffffff;
+    }
+    
+    .chat-input {
+        border-top: 1px solid #dee2e6;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+    
+    .message {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .message.user {
+        justify-content: flex-end;
+    }
+    
+    .message.assistant {
+        justify-content: flex-start;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        word-wrap: break-word;
+    }
+    
+    .message.user .message-content {
+        background: #007bff;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message.assistant .message-content {
+        background: #e9ecef;
+        color: #333;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .message.user .message-avatar {
+        background: #007bff;
+        color: white;
+    }
+    
+    .message.assistant .message-avatar {
+        background: #28a745;
+        color: white;
+    }
+    
+    .conversation-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #dee2e6;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .conversation-item:hover {
+        background: #e9ecef;
+    }
+    
+    .conversation-item.active {
+        background: #007bff;
+        color: white;
+    }
+    
+    .conversation-title {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    
+    .conversation-preview {
+        font-size: 12px;
+        color: #6c757d;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .conversation-item.active .conversation-preview {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 12px 16px;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .typing-indicator.show {
+        display: block;
+    }
+    
+    .input-group {
+        position: relative;
+    }
+    
+    .input-group .btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    
+    .suggestions {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px 8px 0 0;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+    
+    .suggestion-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .suggestion-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+    
+    .document-reference {
+        background: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 14px;
+    }
+    
+    .document-reference .doc-title {
+        font-weight: 500;
+        color: #1976d2;
+    }
+    
+    .document-reference .doc-meta {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Sidebar de conversaciones -->
+        <div class="col-md-3 p-0">
+            <div class="chat-sidebar">
+                <div class="p-3 border-bottom">
+                    <h5 class="mb-0">Conversaciones</h5>
+                    <button class="btn btn-primary btn-sm mt-2" onclick="crearNuevaConversacion()">
+                        <i class="fas fa-plus"></i> Nueva conversación
+                    </button>
+                </div>
+                <div id="conversaciones-list">
+                    {% for conversacion in conversaciones %}
+                    <div class="conversation-item {% if conversacion_activa and conversacion_activa.id == conversacion.id %}active{% endif %}" 
+                         onclick="cargarConversacion({{ conversacion.id }})">
+                        <div class="conversation-title">{{ conversacion.titulo }}</div>
+                        <div class="conversation-preview">
+                            {{ conversacion.fecha_actualizacion|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Área principal del chat -->
+        <div class="col-md-9 p-0">
+            <div class="chat-main">
+                <!-- Mensajes -->
+                <div class="chat-messages" id="chat-messages">
+                    {% if conversacion_activa and mensajes %}
+                        {% for mensaje in mensajes %}
+                        <div class="message {{ mensaje.tipo }}">
+                            <div class="message-avatar">
+                                {% if mensaje.tipo == 'usuario' %}
+                                    U
+                                {% else %}
+                                    IA
+                                {% endif %}
+                            </div>
+                            <div class="message-content">
+                                {{ mensaje.contenido|linebreaks }}
+                                {% if mensaje.documentos_consultados %}
+                                <div class="document-reference">
+                                    <div class="doc-title">📄 Documentos consultados:</div>
+                                    <div class="doc-meta">{{ mensaje.documentos_consultados|length }} documento(s) encontrado(s)</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted mt-5">
+                            <i class="fas fa-robot fa-3x mb-3"></i>
+                            <h4>¡Hola! Soy tu asistente legal</h4>
+                            <p>Puedo ayudarte a buscar documentos, analizar casos y encontrar información en el sistema.</p>
+                            <div class="mt-4">
+                                <h6>Ejemplos de preguntas:</h6>
+                                <ul class="list-unstyled">
+                                    <li>• "¿Dónde está el contrato con el proveedor X?"</li>
+                                    <li>• "Muéstrame los casos de divorcio"</li>
+                                    <li>• "¿Qué documentos tiene el caso CIV-2024-001?"</li>
+                                    <li>• "Busca información sobre el abogado Carlos Mendoza"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Indicador de escritura -->
+                    <div class="typing-indicator" id="typing-indicator">
+                        <div class="message assistant">
+                            <div class="message-avatar">IA</div>
+                            <div class="message-content">
+                                <i class="fas fa-circle"></i>
+                                <i class="fas fa-circle"></i>
+                                <i class="fas fa-circle"></i>
+                                El asistente está escribiendo...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input de mensaje -->
+                <div class="chat-input">
+                    <div class="input-group">
+                        <input type="text" 
+                               class="form-control" 
+                               id="mensaje-input" 
+                               placeholder="Escribe tu pregunta aquí..."
+                               onkeypress="handleKeyPress(event)">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="button" onclick="enviarMensaje()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sugerencias -->
+                    <div class="suggestions" id="suggestions">
+                        <div class="suggestion-item" onclick="usarSugerencia('¿Dónde está el contrato con el proveedor X?')">
+                            ¿Dónde está el contrato con el proveedor X?
+                        </div>
+                        <div class="suggestion-item" onclick="usarSugerencia('Muéstrame los casos de divorcio')">
+                            Muéstrame los casos de divorcio
+                        </div>
+                        <div class="suggestion-item" onclick="usarSugerencia('¿Qué documentos tiene el caso CIV-2024-001?')">
+                            ¿Qué documentos tiene el caso CIV-2024-001?
+                        </div>
+                        <div class="suggestion-item" onclick="usarSugerencia('Busca información sobre el abogado Carlos Mendoza')">
+                            Busca información sobre el abogado Carlos Mendoza
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let conversacionActual = {% if conversacion_activa %}{{ conversacion_activa.id }}{% else %}null{% endif %};
+
+// Función para enviar mensaje
+async function enviarMensaje() {
+    const input = document.getElementById('mensaje-input');
+    const mensaje = input.value.trim();
+    
+    if (!mensaje) return;
+    
+    // Limpiar input
+    input.value = '';
+    
+    // Mostrar mensaje del usuario
+    mostrarMensaje(mensaje, 'usuario');
+    
+    // Mostrar indicador de escritura
+    mostrarTypingIndicator();
+    
+    try {
+        const response = await fetch('/chat/api/enviar-mensaje/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                mensaje: mensaje,
+                conversacion_id: conversacionActual
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Ocultar indicador de escritura
+            ocultarTypingIndicator();
+            
+            // Mostrar respuesta de la IA
+            mostrarMensaje(data.mensaje_ia.contenido, 'assistant', data.mensaje_ia.documentos_consultados);
+            
+            // Actualizar conversación actual
+            conversacionActual = data.conversacion_id;
+            
+            // Actualizar URL
+            window.history.pushState({}, '', `/chat/?conversacion_id=${conversacionActual}`);
+        } else {
+            ocultarTypingIndicator();
+            mostrarMensaje('Error: ' + data.error, 'assistant');
+        }
+    } catch (error) {
+        ocultarTypingIndicator();
+        mostrarMensaje('Error de conexión: ' + error.message, 'assistant');
+    }
+}
+
+// Función para mostrar mensaje
+function mostrarMensaje(contenido, tipo, documentosConsultados = null) {
+    const messagesContainer = document.getElementById('chat-messages');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${tipo}`;
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.textContent = tipo === 'usuario' ? 'U' : 'IA';
+    
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.innerHTML = contenido.replace(/\n/g, '<br>');
+    
+    // Agregar referencias de documentos si existen
+    if (documentosConsultados && documentosConsultados.length > 0) {
+        const docRef = document.createElement('div');
+        docRef.className = 'document-reference';
+        docRef.innerHTML = `
+            <div class="doc-title">📄 Documentos consultados:</div>
+            <div class="doc-meta">${documentosConsultados.length} documento(s) encontrado(s)</div>
+        `;
+        content.appendChild(docRef);
+    }
+    
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(content);
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Función para mostrar indicador de escritura
+function mostrarTypingIndicator() {
+    document.getElementById('typing-indicator').classList.add('show');
+    document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+}
+
+// Función para ocultar indicador de escritura
+function ocultarTypingIndicator() {
+    document.getElementById('typing-indicator').classList.remove('show');
+}
+
+// Función para manejar tecla Enter
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        enviarMensaje();
+    }
+}
+
+// Función para cargar conversación
+async function cargarConversacion(conversacionId) {
+    try {
+        const response = await fetch(`/chat/api/conversacion/${conversacionId}/`);
+        const data = await response.json();
+        
+        if (data.success) {
+            conversacionActual = conversacionId;
+            
+            // Limpiar mensajes actuales
+            document.getElementById('chat-messages').innerHTML = '';
+            
+            // Mostrar mensajes de la conversación
+            data.mensajes.forEach(mensaje => {
+                mostrarMensaje(mensaje.contenido, mensaje.tipo, mensaje.documentos_consultados);
+            });
+            
+            // Actualizar URL
+            window.history.pushState({}, '', `/chat/?conversacion_id=${conversacionId}`);
+            
+            // Actualizar sidebar
+            actualizarSidebar();
+        }
+    } catch (error) {
+        console.error('Error al cargar conversación:', error);
+    }
+}
+
+// Función para crear nueva conversación
+async function crearNuevaConversacion() {
+    try {
+        const response = await fetch('/chat/api/crear-conversacion/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            conversacionActual = data.conversacion.id;
+            
+            // Limpiar mensajes
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="text-center text-muted mt-5">
+                    <i class="fas fa-robot fa-3x mb-3"></i>
+                    <h4>¡Hola! Soy tu asistente legal</h4>
+                    <p>Puedo ayudarte a buscar documentos, analizar casos y encontrar información en el sistema.</p>
+                </div>
+            `;
+            
+            // Actualizar URL
+            window.history.pushState({}, '', `/chat/?conversacion_id=${conversacionActual}`);
+            
+            // Actualizar sidebar
+            actualizarSidebar();
+        }
+    } catch (error) {
+        console.error('Error al crear conversación:', error);
+    }
+}
+
+// Función para actualizar sidebar
+async function actualizarSidebar() {
+    try {
+        const response = await fetch('/chat/api/conversaciones/');
+        const data = await response.json();
+        
+        if (data.success) {
+            const sidebar = document.getElementById('conversaciones-list');
+            sidebar.innerHTML = '';
+            
+            data.conversaciones.forEach(conv => {
+                const item = document.createElement('div');
+                item.className = `conversation-item ${conv.id === conversacionActual ? 'active' : ''}`;
+                item.onclick = () => cargarConversacion(conv.id);
+                
+                item.innerHTML = `
+                    <div class="conversation-title">${conv.titulo}</div>
+                    <div class="conversation-preview">${new Date(conv.fecha_actualizacion).toLocaleString()}</div>
+                `;
+                
+                sidebar.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error('Error al actualizar sidebar:', error);
+    }
+}
+
+// Función para usar sugerencia
+function usarSugerencia(sugerencia) {
+    document.getElementById('mensaje-input').value = sugerencia;
+    document.getElementById('suggestions').style.display = 'none';
+}
+
+// Función para obtener cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    // Hacer scroll al final de los mensajes
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Mostrar sugerencias al hacer clic en el input
+    document.getElementById('mensaje-input').addEventListener('focus', function() {
+        document.getElementById('suggestions').style.display = 'block';
+    });
+    
+    // Ocultar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.input-group')) {
+            document.getElementById('suggestions').style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

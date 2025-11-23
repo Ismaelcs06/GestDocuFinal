@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Timeline - {{ expediente.nroExpediente }}{% endblock %}
+
+{% block content %}
+<div class="col-lg-8 mx-auto">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">🕒 Línea de tiempo — {{ expediente.nroExpediente }}</h3>
+    <a href="{% url 'casos:carpeta_list' expediente.id %}" class="btn btn-outline-primary btn-sm">
+      <i class="fa fa-folder me-1"></i> Ver carpetas
+    </a>
+  </div>
+
+  <div class="card shadow-sm p-4">
+    {% if eventos %}
+      <div class="timeline">
+        {% for e in eventos %}
+        <div class="position-relative ps-4 mb-4">
+          <div class="position-absolute top-0 start-0 translate-middle-y bg-primary rounded-circle" style="width:10px; height:10px;"></div>
+          <div>
+            <div class="fw-semibold">{{ e.tipo }}</div>
+            <div>{{ e.descripcion }}</div>
+            <small class="text-muted">
+              {{ e.fecha|date:"d/m/Y H:i" }} 
+              {% if e.usuario %} — por {{ e.usuario.username }}{% endif %}
+            </small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted text-center mb-0">Aún no hay eventos registrados en este expediente.</p>
+    {% endif %}
+  </div>
+
+  <div class="mt-3">
+    <a href="{% url 'casos:expediente_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fa fa-arrow-left me-1"></i> Volver a expedientes
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ tipo }}{% endblock %}
+
+{% block content %}
+<div class="col-lg-8">
+  <h3 class="mb-4">Datos adicionales del {{ tipo }}: {{ actor.nombres }} {{ actor.apellidoPaterno }}</h3>
+
+  <form method="post" class="card shadow-sm p-4">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}
+          <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    <div class="mt-3 d-flex justify-content-between">
+      <a href="{% url 'accounts:actors_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

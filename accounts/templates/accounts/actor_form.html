@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Asignar Actor{% endblock %}
+
+{% block content %}
+<div class="col-lg-8 mx-auto">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="m-0">Asignar Actor a {{ usuario.username }}</h5>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.tipoActor.label }}</label>
+            {{ form.tipoActor }}
+            {% for error in form.tipoActor.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.ci.label }}</label>
+            {{ form.ci }}
+            {% for error in form.ci.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.nombres.label }}</label>
+            {{ form.nombres }}
+            {% for error in form.nombres.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.apellidoPaterno.label }}</label>
+            {{ form.apellidoPaterno }}
+            {% for error in form.apellidoPaterno.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.apellidoMaterno.label }}</label>
+            {{ form.apellidoMaterno }}
+            {% for error in form.apellidoMaterno.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.telefono.label }}</label>
+            {{ form.telefono }}
+            {% for error in form.telefono.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 mb-3">
+            <label class="form-label fw-semibold">{{ form.direccion.label }}</label>
+            {{ form.direccion }}
+            {% for error in form.direccion.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">{{ form.estadoActor.label }}</label>
+            {{ form.estadoActor }}
+            {% for error in form.estadoActor.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+          <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-primary">Guardar Actor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

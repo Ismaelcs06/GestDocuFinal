@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Equipo del Caso{% endblock %}
+
+{% block content %}
+<div class="col-12">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">👥 Equipo del Caso: <span class="text-primary">{{ caso.nroCaso }}</span></h3>
+    <a href="{% url 'casos:equipo_add' caso.id %}" class="btn btn-primary btn-sm">
+      <i class="fa fa-user-plus me-1"></i> Agregar Actor
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+      <thead class="table-light">
+        <tr>
+          <th>Actor</th>
+          <th>Rol en el Equipo</th>
+          <th>Fecha de Asignación</th>
+          <th>Fecha de Salida</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in equipo %}
+        <tr>
+          <td data-label="Actor">{{ e.actor.nombres }} {{ e.actor.apellidoPaterno }}</td>
+          <td data-label="Rol">{{ e.get_rolEnEquipo_display }}</td>
+          <td data-label="Asignación">{{ e.fechaAsignacion|date:"d/m/Y" }}</td>
+          <td data-label="Salida">{{ e.fechaSalida|default:"—"|date:"d/m/Y" }}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'casos:equipo_delete' e.id %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm btn-delete-equipo" title="Eliminar">
+                <i class="fa fa-trash"></i>
+              </button>
+
+            </form>
+          </td>
+
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-3">No hay miembros en este caso.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-3">
+    <a href="{% url 'casos:case_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fa fa-arrow-left me-1"></i> Volver a casos
+    </a>
+  </div>
+</div>
+
+
+
+<!-- En la parte inferior de base.html (antes del </body>) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".btn-delete-equipo").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
+        const form = btn.closest("form");
+        Swal.fire({
+          title: "¿Eliminar miembro?",
+          text: "Esta acción no se puede deshacer.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar"
+        }).then(result => {
+          if (result.isConfirmed) form.submit();
+        });
+      });
+    });
+  });
+</script>
+
+{% endblock %}

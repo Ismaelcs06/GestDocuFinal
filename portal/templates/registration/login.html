@@ -1,0 +1,53 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Iniciar Sesión</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Tu CSS -->
+  <link href="{% static 'portal/css/login.css' %}" rel="stylesheet">
+</head>
+<body>
+  <div class="card">
+    <h1>Iniciar Sesión</h1>
+    <p class="sub">Ingresa tus credenciales para acceder a tu cuenta</p>
+
+    {% if form.non_field_errors %}
+      <div class="err">
+        {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div>
+        <label for="id_username">Usuario</label>
+        <div class="field">
+          <input id="id_username" name="username" type="text" required
+                 placeholder="Tu usuario" value="{{ form.username.value|default:'' }}">
+        </div>
+      </div>
+
+      <div>
+        <label for="id_password">Contraseña</label>
+        <div class="field">
+          <input id="id_password" name="password" type="password" required placeholder="••••••••">
+          <span class="eye" id="toggleEye">Mostrar</span>
+        </div>
+      </div>
+
+      <button class="btn" type="submit">Iniciar Sesión</button>
+    </form>
+
+    <div class="footer">
+      ¿No tienes una cuenta?
+      <a href="#">Crea una</a>
+    </div>
+  </div>
+
+  <!-- Tu JS -->
+  <script src="{% static 'portal/js/login.js' %}"></script>
+</body>
+</html>

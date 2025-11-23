@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Carpetas del Expediente{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <h3 class="m-0 flex-grow-1">Carpetas del Expediente {{ expediente.nroExpediente }}</h3>
+    <a href="{% url 'casos:carpeta_create' expediente.id %}" class="btn btn-primary">
+      <i class="fa fa-folder-plus me-1"></i> <span class="d-none d-sm-inline">Nueva Carpeta</span>
+    </a>
+  </div>
+
+  {% if carpetas %}
+  <div class="row g-3">
+    {% for carpeta in carpetas %}
+    <div class="col-12">
+      <!-- Tarjeta de carpeta -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <h5 class="card-title mb-1 d-flex align-items-center gap-2">
+                <i class="fa fa-folder-open text-warning"></i>
+                {{ carpeta.nombre }}
+              </h5>
+              <span class="badge bg-secondary">{{ carpeta.estado }}</span>
+            </div>
+
+            <!-- Acciones (icon-only en XS; con texto en SM+) -->
+            <div class="d-flex gap-2">
+              {# Si tienes una vista detalle de carpeta, sustitúyela aquí #}
+              {# <a href="{% url 'casos:carpeta_detalle' carpeta.id %}" class="btn btn-outline-primary btn-sm"> #}
+                <a href="{% url 'casos:carpeta_detalle' carpeta.id %}" class="btn btn-outline-primary btn-sm">
+                  <i class="fa fa-eye"></i> <span class="d-none d-sm-inline ms-1">Abrir</span>
+                </a>
+
+
+                {% if carpeta.subcarpetas.all %}
+                <button class="btn btn-outline-dark btn-sm" data-bs-toggle="collapse"
+                  data-bs-target="#sub-{{ carpeta.id }}" aria-expanded="false" aria-controls="sub-{{ carpeta.id }}">
+                  <i class="fa fa-chevron-down"></i> <span class="d-none d-sm-inline ms-1">Subcarpetas</span>
+                </button>
+                {% endif %}
+            </div>
+          </div>
+
+          {% if carpeta.subcarpetas.all %}
+          <!-- Lista de subcarpetas (acordeón) -->
+          <div id="sub-{{ carpeta.id }}" class="collapse mt-3">
+            <ul class="list-group list-group-flush border rounded">
+              {% for sub in carpeta.subcarpetas.all %}
+              <li class="list-group-item d-flex align-items-center gap-2">
+                <i class="fa fa-folder text-warning"></i>
+                <span class="flex-grow-1">{{ sub.nombre }}</span>
+                {# Si tienes links por subcarpeta, agrégalos aquí #}
+              </li>
+              {% empty %}
+              <li class="list-group-item text-muted">No hay subcarpetas.</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-light border text-muted">No hay carpetas creadas aún.</div>
+  {% endif %}
+</div>
+{% endblock %}

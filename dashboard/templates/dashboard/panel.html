@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Panel General{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="m-0"><i class="fa fa-chart-line text-primary me-2"></i> Panel General</h3>
+    <a href="{% url 'chat:chat' %}" class="btn btn-outline-primary">
+      <i class="fa fa-robot me-1"></i> Chat con IA
+    </a>
+  </div>
+
+  <!-- Indicadores principales -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-primary-subtle">
+        <div class="card-body text-center">
+          <div class="text-muted small">Casos totales</div>
+          <div class="fs-3 fw-bold text-primary">{{ total_casos }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-success-subtle">
+        <div class="card-body text-center">
+          <div class="text-muted small">Documentos totales</div>
+          <div class="fs-3 fw-bold text-success">{{ total_documentos }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-warning-subtle">
+        <div class="card-body text-center">
+          <div class="text-muted small">Mis casos</div>
+          <div class="fs-3 fw-bold text-warning">{{ mis_casos }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-info-subtle">
+        <div class="card-body text-center">
+          <div class="text-muted small">Mis documentos</div>
+          <div class="fs-3 fw-bold text-info">{{ mis_documentos }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Casos con más documentos -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-semibold">
+      <i class="fa fa-folder me-1 text-primary"></i> Casos con más documentos
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr><th>#</th><th>Nro Caso</th><th>Tipo</th><th>Documentos</th></tr></thead>
+        <tbody>
+          {% for c in top_casos_docs %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ c.nroCaso }}</td>
+            <td>{{ c.tipoCaso }}</td>
+            <td><span class="badge bg-primary">{{ c.num_docs }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-3">Sin registros</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Últimos documentos -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-light fw-semibold">
+      <i class="fa fa-file-alt me-1 text-success"></i> Últimos documentos cargados
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Carpeta</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in ultimos_documentos %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ d.nombreDocumento }}</td>
+            <td>{{ d.tipoDocumento.nombre }}</td>
+            <td>{{ d.carpeta.nombre }}</td>
+            <td>{{ d.creadoEn|date:"d/m/Y H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-3">Sin documentos recientes</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

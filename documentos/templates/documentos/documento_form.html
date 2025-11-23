@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Registrar Documento{% endblock %}
+
+{% block content %}
+<div class="col-lg-10 mx-auto">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0"><i class="fa fa-file-text text-primary me-2"></i> Registrar Nuevo Documento</h3>
+    <a href="{% url 'documentos:documento_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fa fa-arrow-left me-1"></i> Volver
+    </a>
+  </div>
+
+  <!-- Formulario -->
+  <form method="post" enctype="multipart/form-data" class="card shadow-sm p-4 border-0">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- Sección: Información básica -->
+    <h5 class="mb-3 text-primary border-bottom pb-2">
+      <i class="fa fa-info-circle me-2"></i> Información General
+    </h5>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">{{ form.nombreDocumento.label }}</label>
+        {{ form.nombreDocumento }}
+        {% for error in form.nombreDocumento.errors %}
+          <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">{{ form.fechaDoc.label }}</label>
+        {{ form.fechaDoc }}
+        {% for error in form.fechaDoc.errors %}
+          <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">{{ form.tipoDocumento.label }}</label>
+        {{ form.tipoDocumento }}
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">{{ form.etapaProcesal.label }}</label>
+        {{ form.etapaProcesal }}
+      </div>
+    </div>
+
+    <!-- Sección: Ubicación -->
+    <h5 class="mt-4 mb-3 text-primary border-bottom pb-2">
+      <i class="fa fa-folder-open me-2"></i> Ubicación del Documento
+    </h5>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">{{ form.carpeta.label }}</label>
+        {{ form.carpeta }}
+        <small class="text-muted d-block">Selecciona la carpeta dentro del expediente donde se almacenará el documento.</small>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">{{ form.estado.label }}</label>
+        {{ form.estado }}
+      </div>
+    </div>
+
+    <!-- Sección: Archivo y palabras clave -->
+    <h5 class="mt-4 mb-3 text-primary border-bottom pb-2">
+      <i class="fa fa-paperclip me-2"></i> Archivo y Palabras Clave
+    </h5>
+    <div class="row">
+      <div class="col-md-8 mb-3">
+        <label class="form-label fw-semibold">{{ form.palabraClave.label }}</label>
+        {{ form.palabraClave }}
+        <small class="text-muted">Usa palabras clave separadas por comas para facilitar las búsquedas.</small>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label fw-semibold">{{ form.rutaDocumento.label }}</label>
+        {{ form.rutaDocumento }}
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <a href="{% url 'documentos:documento_list' %}" class="btn btn-outline-secondary">
+        <i class="fa fa-times me-1"></i> Cancelar
+      </a>
+      <button type="submit" class="btn btn-success">
+        <i class="fa fa-save me-1"></i> Guardar Documento
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

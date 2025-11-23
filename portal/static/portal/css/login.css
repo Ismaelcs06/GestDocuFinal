@@ -1,0 +1,121 @@
+:root {
+    --bg: #f5f7fb;
+    --card: #fff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --primary: #4f46e5;
+    --primary-600: #4338ca;
+    --ring: rgba(79, 70, 229, .35);
+    --danger: #dc2626;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    font-family: system-ui, Roboto, Arial;
+    background: var(--bg);
+}
+
+body {
+    display: grid;
+    place-items: center;
+    color: var(--text);
+}
+
+.card {
+    width: min(420px, 92vw);
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(2, 6, 23, .08);
+    padding: 28px 26px;
+}
+
+h1 {
+    margin: .2rem 0 1rem;
+    font-size: 28px;
+    text-align: center;
+}
+
+.sub {
+    color: var(--muted);
+    text-align: center;
+    margin: -6px 0 20px;
+    font-size: 14px;
+}
+
+form {
+    display: grid;
+    gap: 14px;
+}
+
+label {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.field:focus-within {
+    outline: 2px solid var(--ring);
+    border-color: transparent;
+}
+
+input[type="text"],
+input[type="password"] {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 15px;
+    background: transparent;
+}
+
+.btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    width: 100%;
+}
+
+.btn:hover {
+    background: var(--primary-600);
+}
+
+.err {
+    background: #fee2e2;
+    color: var(--danger);
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.footer {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.eye {
+    cursor: pointer;
+    user-select: none;
+    color: #94a3b8;
+    font-size: 14px;
+}

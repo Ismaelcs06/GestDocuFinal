@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Registrar Nueva Versión{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h4>Registrar nueva versión para: <strong>{{ documento.nombreDocumento }}</strong></h4>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_rutaArchivo">Archivo:</label>
+      {{ form.rutaArchivo }}
+    </div>
+    <div class="mb-3">
+      <label for="id_comentario">Comentario:</label>
+      {{ form.comentario }}
+    </div>
+    <button type="submit" class="btn btn-success">Guardar</button>
+    <a href="{% url 'documentos:version_list' documento.id %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

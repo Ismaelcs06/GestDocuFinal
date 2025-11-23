@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load report_tags %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="col-12">
+  <h4 class="mb-3">{{ titulo }}</h4>
+  <div class="table-responsive">
+    <table class="table table-bordered table-sm">
+      <thead>
+        <tr>
+          {% for col in columns %}<th>{{ col|capfirst }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          {% for col in columns %}
+          <td>{{ row|get_item:col }}</td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ columns|length }}" class="text-center text-muted py-3">Sin datos</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

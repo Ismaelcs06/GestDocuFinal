@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Detalle de Bitácora{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-4">📄 Detalle del Registro de Bitácora</h3>
+
+  <!-- Card con datos generales (ya es responsivo) -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Información General</h5>
+      <p><strong>Usuario:</strong> {{ bitacora.idUsuario.username }}</p>
+      <p><strong>Acción:</strong> {{ bitacora.login }}</p>
+      <p><strong>IP:</strong> {{ bitacora.ip|default:"—" }}</p>
+      <p><strong>Fecha:</strong> {{ bitacora.fecha|date:"d/m/Y H:i" }}</p>
+      <p><strong>Dispositivo:</strong> {{ bitacora.device|default:"—" }}</p>
+      <p><strong>Navegador / UserAgent:</strong> {{ bitacora.userAgent|default:"—" }}</p>
+    </div>
+  </div>
+
+  <h5 class="mb-3">📑 Acciones registradas</h5>
+
+  <!-- ENVOLTURA: convierte la tabla en tarjetas SOLO en móvil -->
+  <div class="table-responsive stack-xs table-xs-compact stack-tight">
+    <table class="table table-striped table-hover align-middle">
+      <thead class="thead-light">
+        <tr>
+          <th>Fecha</th>
+          <th>Tabla</th>
+          <th>Acción</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in detalles %}
+        <tr>
+          <td class="td-nowrap" data-label="Fecha">{{ d.fecha|date:"d/m/Y H:i" }}</td>
+          <td data-label="Tabla">{{ d.tabla }}</td>
+          <td data-label="Acción">{{ d.accion }}</td>
+          <!-- td-wrap permite saltos de línea; en móvil la tarjeta no se desborda -->
+          <td class="td-wrap" data-label="Detalle">
+            {{ d.detalle|default:"—" }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-center text-muted">No hay detalles asociados a este registro.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'seguridad:bitacora_list' %}" class="btn btn-secondary">
+      ← Volver a la Bitácora
+    </a>
+  </div>
+</div>
+{% endblock %}

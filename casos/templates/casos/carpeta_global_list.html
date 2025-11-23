@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Carpetas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">Todas las Carpetas del Sistema</h3>
+
+  <!-- 👉 Wrapper responsivo + tarjetas en móvil -->
+  <div class="table-responsive stack-xs stack-tight" style="--stack-label-w: 130px;">
+    <table class="table table-bordered table-hover table-xs-compact">
+      <thead class="thead-light">
+        <tr>
+          <th>Carpeta</th>
+          <th>Expediente</th>
+          <th>Padre</th>
+          <th>Estado</th>
+          <th>Creado en</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for carpeta in carpetas %}
+        <tr>
+          <td data-label="Carpeta" class="td-wrap td-truncate td-truncate-xs">
+            {{ carpeta.nombre }}
+          </td>
+          <td data-label="Expediente">{{ carpeta.expediente.nroExpediente }}</td>
+          <td data-label="Padre" class="td-truncate td-truncate-xs">
+            {{ carpeta.carpetaPadre.nombre|default:"—" }}
+          </td>
+          <td data-label="Estado">{{ carpeta.estado }}</td>
+          <td data-label="Creado en" class="td-nowrap">{{ carpeta.creadoEn|date:"d/m/Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center">No hay carpetas registradas.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

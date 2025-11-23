@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Usuarios del sistema{% endblock %}
+
+{% block content %}
+<div class="col-12">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Usuarios del sistema</h3>
+    <div class="d-flex gap-2">
+      <form method="get" class="d-flex">
+        <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Buscar usuario...">
+      </form>
+      <a href="{% url 'accounts:user_create' %}" class="btn btn-primary btn-sm">+ Nuevo usuario</a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+      <thead class="table-light">
+        <tr>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Estado</th>
+          <th>Cuenta</th>
+          <th>Actor</th>
+          <th>Fecha de creación</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.email }}</td>
+          <td>
+            <span class="badge {% if u.estado == 'ACTIVO' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ u.estado }}
+            </span>
+          </td>
+          <td>
+            <span class="badge {% if u.estadoCuenta == 'HABILITADA' %}bg-primary{% else %}bg-danger{% endif %}">
+              {{ u.estadoCuenta }}
+            </span>
+          </td>
+          <td>
+            {% if u.actor %}
+              {{ u.actor.get_tipoActor_display }}
+            {% else %}
+              <a href="{% url 'accounts:actor_create' u.id %}" class="btn btn-outline-secondary btn-sm">Crear actor</a>
+            {% endif %}
+          </td>
+          <td>{{ u.date_joined|date:"d/m/Y H:i" }}</td>
+          <td class="text-end">
+            <div class="btn-group">
+              <a href="{% url 'accounts:assign_roles' u.id %}" class="btn btn-outline-primary btn-sm" title="Asignar roles">🎭</a>
+              <a href="{% url 'accounts:user_update' u.id %}" class="btn btn-outline-warning btn-sm" title="Editar">✏️</a>
+              <a href="{% url 'accounts:user_delete' u.id %}" class="btn btn-outline-danger btn-sm" title="Eliminar">🗑️</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-muted py-3">No hay usuarios registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
