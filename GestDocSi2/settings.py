@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'accounts',
     'chat',
     'reportes',
-    'finanzas'
+    'finanzas',
 
     'whitenoise.runserver_nostatic',
     'rest_framework',
@@ -132,6 +132,10 @@ OPENAI_TEMPERATURE = env("OPENAI_TEMPERATURE", default=0.7)
 OPENAI_MAX_TOKENS = env("OPENAI_MAX_TOKENS", default=1000)
 # ...existing code...
 
+# STRIPE CONFIGURATION
+# Usamos env() para leer del archivo .env
+STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
 
 #
 SIMPLE_JWT = {
@@ -151,6 +155,7 @@ SIMPLE_JWT = {
 # --- Django REST Framework Configuration ---
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (

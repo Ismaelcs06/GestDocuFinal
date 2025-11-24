@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Catálogo de Conceptos</h1>
+        <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCrearConcepto">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Concepto
+        </button>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Servicios y Tarifas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre del Servicio</th>
+                            <th>Precio Sugerido (Bs)</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in conceptos %}
+                        <tr>
+                            <td>{{ c.nombre }}</td>
+                            <td class="text-end">{{ c.precio_sugerido }}</td>
+                            <td class="text-center">
+                                {% if c.activo %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No hay conceptos registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalCrearConcepto" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Agregar Nuevo Concepto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formConcepto">
+            <div class="mb-3">
+                <label class="form-label">Nombre del Servicio</label>
+                <input type="text" class="form-control" id="nombreConcepto" required placeholder="Ej: Consulta Jurídica">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Precio Sugerido (Bs)</label>
+                <input type="number" class="form-control" id="precioConcepto" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="activoConcepto" checked>
+                <label class="form-check-label" for="activoConcepto">Activo para nuevos pagos</label>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarConcepto()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    // --- SOLUCIÓN AL PROBLEMA DE LA PANTALLA GRIS ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Esto mueve el modal fuera de los contenedores y lo pega al final del cuerpo
+        // Así Bootstrap puede calcular bien las capas (z-index)
+        var modalElement = document.getElementById('modalCrearConcepto');
+        document.body.appendChild(modalElement);
+    });
+    // -------------------------------------------------
+
+    function guardarConcepto() {
+        // 1. Obtener datos
+        const nombre = document.getElementById('nombreConcepto').value;
+        const precio = document.getElementById('precioConcepto').value;
+        const activo = document.getElementById('activoConcepto').checked;
+
+        if(!nombre || !precio) {
+            alert("Por favor complete todos los campos");
+            return;
+        }
+
+        // 2. Enviar a la API
+        fetch('/api/finanzas/conceptos/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                nombre: nombre,
+                precio_sugerido: parseFloat(precio),
+                activo: activo
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Concepto creado correctamente");
+                location.reload(); 
+            } else {
+                return response.json().then(err => {
+                    console.error(err);
+                    alert("Error: " + JSON.stringify(err));
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Error de conexión.");
+        });
+    }
+</script>
+{% endblock %}

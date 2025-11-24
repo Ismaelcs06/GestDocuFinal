@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://js.stripe.com/v3/"></script>
+
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Gestión Financiera</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Registrar Nuevo Pago</h6>
+        </div>
+        <div class="card-body">
+            <form id="formPago">
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="caso" class="form-label">Caso / Expediente</label>
+                        <select id="caso" name="caso" class="form-select form-control" required>
+                            <option selected disabled value="">Seleccione un caso...</option>
+                            {% for c in casos %}
+                                <option value="{{ c.id }}">{{ c.nroCaso }} - {{ c.cliente_principal }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="concepto" class="form-label">Concepto de Pago</label>
+                        <select id="concepto" name="concepto" class="form-select form-control" required>
+                            <option selected disabled value="">Seleccione servicio...</option>
+                            {% for s in conceptos %}
+                                <option value="{{ s.id }}" data-precio="{{ s.precio_sugerido }}">{{ s.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="monto" class="form-label">Monto (Bs)</label>
+                        <input type="number" class="form-control" id="monto" name="monto" step="0.01" placeholder="0.00" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="metodo" class="form-label">Método de Pago</label>
+                        <select id="metodo" name="metodo_pago" class="form-select form-control">
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="QR">Transferencia QR</option>
+                            <option value="TARJETA">Tarjeta / Pasarela (Stripe)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="div-tarjeta" style="display:none;" class="row mb-4 p-3 border rounded bg-light mx-1">
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-primary"><i class="fas fa-credit-card"></i> Datos de la Tarjeta</label>
+                        <div id="card-element" class="form-control p-3"></div>
+                        <div id="card-errors" class="text-danger mt-2 small" role="alert"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-icon-split">
+                    <span class="icon text-white-50">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span class="text" id="btnText">Registrar Cobro</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- CONFIGURACIÓN DE STRIPE ---
+    // Tu clave pública real proporcionada
+    const stripe = Stripe('{{ stripe_public_key }}');
+    const elements = stripe.elements();
+    
+    // Estilos para que el input de tarjeta se parezca a tus inputs de Bootstrap
+    const style = {
+        base: {
+            color: '#32325d',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    };
+    
+    const card = elements.create('card', {style: style});
+    card.mount('#card-element');
+
+    // --- LÓGICA DE INTERFAZ ---
+
+    // 1. Autocompletar Precio
+    const selectConcepto = document.getElementById('concepto');
+    const inputMonto = document.getElementById('monto');
+
+    selectConcepto.addEventListener('change', function () {
+        const opcionSeleccionada = this.options[this.selectedIndex];
+        let precioSugerido = opcionSeleccionada.getAttribute('data-precio');
+        if (precioSugerido) {
+            inputMonto.value = precioSugerido.replace(',', '.');
+        }
+    });
+
+    // 2. Mostrar/Ocultar Tarjeta según el método
+    const selectMetodo = document.getElementById('metodo');
+    const divTarjeta = document.getElementById('div-tarjeta');
+
+    selectMetodo.addEventListener('change', function() {
+        if (this.value === 'TARJETA') {
+            divTarjeta.style.display = 'block';
+        } else {
+            divTarjeta.style.display = 'none';
+        }
+    });
+
+    // --- LÓGICA DE ENVÍO (CORE) ---
+    document.getElementById('formPago').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        
+        const btn = document.querySelector('button[type="submit"]');
+        const btnText = document.getElementById('btnText');
+        
+        // Bloquear botón para evitar doble pago
+        btn.disabled = true;
+        btnText.innerText = 'Procesando...';
+
+        const metodo = selectMetodo.value;
+        const monto = inputMonto.value;
+        let transaccionIdExterno = null;
+
+        try {
+            // A. SI ES TARJETA -> PROCESAR CON STRIPE PRIMERO
+            if (metodo === 'TARJETA') {
+                // 1. Pedir al backend que cree la intención de pago
+                const responseIntent = await fetch("{% url 'finanzas:crear_intento_pago' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ monto: monto })
+                });
+
+                if (!responseIntent.ok) throw new Error("Error al comunicarse con la pasarela.");
+                
+                const dataIntent = await responseIntent.json();
+
+                // 2. Confirmar el pago con Stripe (Popup o validación interna)
+                const result = await stripe.confirmCardPayment(dataIntent.clientSecret, {
+                    payment_method: { card: card }
+                });
+
+                if (result.error) {
+                    // Error en la tarjeta (fondos insuficientes, etc.)
+                    document.getElementById('card-errors').textContent = result.error.message;
+                    throw new Error(result.error.message);
+                } else {
+                    if (result.paymentIntent.status === 'succeeded') {
+                        // ¡Pago exitoso! Guardamos el ID para auditoría
+                        transaccionIdExterno = result.paymentIntent.id;
+                    }
+                }
+            }
+
+            // B. GUARDAR EN TU BASE DE DATOS (Para todos los métodos)
+            const dataBackend = {
+                caso: document.getElementById('caso').value,
+                concepto: document.getElementById('concepto').value,
+                monto: parseFloat(monto),
+                metodo_pago: metodo,
+                transaccion_id_externo: transaccionIdExterno
+                // Usuario no se envía, el backend lo deduce del Caso
+            };
+
+            const responseSave = await fetch('/api/finanzas/pagos/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(dataBackend)
+            });
+
+            if (responseSave.ok) {
+                const res = await responseSave.json();
+                alert("¡Pago registrado exitosamente! Factura: " + res.factura.nro_factura);
+                window.location.href = "{% url 'finanzas:historial_pagos' %}";
+            } else {
+                const err = await responseSave.json();
+                console.error(err);
+                alert("Error al guardar en el sistema: " + JSON.stringify(err));
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Error: " + error.message);
+        } finally {
+            // Restaurar botón si falló o terminó
+            btn.disabled = false;
+            btnText.innerText = 'Registrar Cobro';
+        }
+    });
+</script>
+{% endblock %}

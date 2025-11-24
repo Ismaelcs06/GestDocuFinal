@@ -46,7 +46,7 @@ urlpatterns = [
     # Gestión de reportes
     
     path("reportes/", include(("reportes.urls", "reportes"), namespace="reportes")),
-
+    path("api/finanzas/", include("finanzas.urls")),
 
 ]
 

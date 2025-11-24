@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Historial de Pagos y Facturación</h1>
+        <a href="{% url 'finanzas:registrar_pago' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Cobro
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Transacciones Registradas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Fecha</th>
+                            <th>Caso</th>
+                            <th>Cliente</th>
+                            <th>Concepto</th>
+                            <th>Monto (Bs)</th>
+                            <th>Método</th>
+                            <th>Estado</th>
+                            <th>Factura</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pagos %}
+                        <tr>
+                            <td>{{ p.id }}</td>
+                            <td>{{ p.fecha_pago|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if p.caso %}
+                                {{ p.caso.nro_caso }}
+                                {% else %}
+                                <span class="text-muted">Sin Caso</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.usuario.username }}</td>
+                            <td>
+                                {% if p.concepto %}
+                                {{ p.concepto.nombre }}
+                                {% else %}
+                                Genérico
+                                {% endif %}
+                            </td>
+                            <td class="font-weight-bold">{{ p.monto }}</td>
+                            <td>
+                                {% if p.metodo_pago == 'QR' %}
+                                <span class="badge badge-info"><i class="fas fa-qrcode"></i> QR</span>
+                                {% elif p.metodo_pago == 'TARJETA' %}
+                                <span class="badge badge-primary"><i class="fas fa-credit-card"></i> Tarjeta</span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="fas fa-money-bill"></i> Efectivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.estado == 'COMPLETADO' %}
+                                <span class="badge badge-success">Completado</span>
+                                {% elif p.estado == 'PENDIENTE' %}
+                                <span class="badge badge-warning">Pendiente</span>
+                                {% else %}
+                                <span class="badge badge-danger">Fallido</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.factura %}
+                                <a href="{% url 'finanzas:descargar_factura' p.id %}"
+                                    class="btn btn-sm btn-outline-dark" target="_blank">
+                                    <i class="fas fa-file-invoice"></i> PDF
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">No generada</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-gray-500">No hay pagos registrados aún.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

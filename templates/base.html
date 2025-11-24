@@ -165,6 +165,40 @@
             </div>
           </li>
 
+
+          <!-- FINANZAS -->
+
+          <li class="mb-2">
+            <button class="btn w-100 text-start text-white" type="button" data-bs-toggle="collapse"
+              data-bs-target="#menuFinanzas">
+              <i class="fa-solid fa-hand-holding-dollar me-2"></i> Gestión Financiera
+            </button>
+            <div id="menuFinanzas" class="collapse">
+              <ul class="list-unstyled ps-3">
+
+                <li>
+                  <a href="{% url 'finanzas:registrar_pago' %}" class="text-white text-decoration-none">
+                    <i class="fa-solid fa-cash-register me-2"></i> Registrar Pago
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{% url 'finanzas:historial_pagos' %}" class="text-white text-decoration-none">
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i> Historial y Facturas
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{% url 'finanzas:conceptos_list' %}" class="text-white text-decoration-none">
+                    <i class="fa-solid fa-tags me-2"></i> Conceptos de Pago
+                  </a>
+                </li>
+
+              </ul>
+            </div>
+          </li>
+
+
           <!-- Reportes -->
           <li class="mb-2">
             <button class="btn w-100 text-start text-white" type="button" data-bs-toggle="collapse"

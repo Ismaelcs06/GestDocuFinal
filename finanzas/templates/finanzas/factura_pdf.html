@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Helvetica, sans-serif; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4e73df; padding-bottom: 10px; }
+        .empresa { font-size: 20px; font-weight: bold; color: #4e73df; }
+        .titulo { font-size: 16px; font-weight: bold; margin-top: 20px; }
+        .info-box { margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fc; }
+        .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px; }
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="empresa">GestDocu - Bufete Jurídico</div>
+        <div>Av. Las Americas #123, Santa Cruz</div>
+        <div>NIT: 1020304050</div>
+    </div>
+
+    <div class="info-box">
+        <strong>Nro. Factura:</strong> {{ factura.nro_factura }}<br>
+        <strong>Fecha:</strong> {{ factura.fecha_emision|date:"d/m/Y" }}<br>
+        <strong>Cliente:</strong> {{ factura.razon_social }}<br>
+        <strong>NIT/CI Cliente:</strong> {{ factura.nit_ci }}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th>Importe</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ pago.concepto.nombre }} (Caso: {{ pago.caso.nroCaso }})</td>
+                <td>Bs {{ pago.monto }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="total">
+        Total Pagado: Bs {{ pago.monto }}
+    </div>
+
+    <div class="footer">
+        Gracias por confiar en nuestros servicios. Este documento es un comprobante de pago generado electrónicamente.
+    </div>
+</body>
+</html>
