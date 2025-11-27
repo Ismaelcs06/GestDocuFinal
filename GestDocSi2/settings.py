@@ -130,12 +130,17 @@ OPENAI_API_KEY = env("OPENAI_API_KEY", default=None)
 OPENAI_MODEL = env("OPENAI_MODEL", default="gpt-3.5-turbo")
 OPENAI_TEMPERATURE = env("OPENAI_TEMPERATURE", default=0.7)
 OPENAI_MAX_TOKENS = env("OPENAI_MAX_TOKENS", default=1000)
-# ...existing code...
+# Modelo de embeddings para OpenAI
+OPENAI_EMBEDDING_MODEL = env("OPENAI_EMBEDDING_MODEL", default="text-embedding-3-small")
+OPENAI_REQUEST_TIMEOUT = int(env("OPENAI_REQUEST_TIMEOUT", default=15))
+EMBEDDING_RETRY_ATTEMPTS = int(env("EMBEDDING_RETRY_ATTEMPTS", default=2))
 
 # STRIPE CONFIGURATION
 # Usamos env() para leer del archivo .env
 STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
+
+
 
 #
 SIMPLE_JWT = {

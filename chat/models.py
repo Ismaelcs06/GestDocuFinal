@@ -82,6 +82,19 @@ class ConsultaDocumento(models.Model):
         null=True,
         blank=True
     )
+    # Relación opcional con pagos/facturas (finanzas)
+    pago = models.ForeignKey(
+        'finanzas.Pago',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    factura = models.ForeignKey(
+        'finanzas.Factura',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
     actor = models.ForeignKey(
         'actores.Actor',
         on_delete=models.CASCADE,

@@ -195,8 +195,8 @@ class AsistenteIAService:
                 temperature=self.temperatura,
                 max_tokens=self.max_tokens
             )
-            
-            return response.choices[0].message.content
+            raw = response.choices[0].message.content
+            return self._normalizar_respuesta(raw)
             
         except Exception as e:
             error_msg = str(e)
@@ -355,6 +355,18 @@ FORMATO DE RESPUESTA:
                     for key, value in actor['info_adicional'].items():
                         contexto_texto += f"  - {key.replace('_', ' ').title()}: {value}\n"
             contexto_texto += "\n"
+
+        # Agregar pagos encontrados
+        if db_resultados.get('pagos'):
+            contexto_texto += "💳 PAGOS ENCONTRADOS:\n"
+            for pago in db_resultados['pagos']:
+                contexto_texto += f"• Pago #{pago['id']} - Monto: {pago['monto']} - Estado: {pago['estado']}\n"
+                contexto_texto += f"  - Método: {pago.get('metodo', 'N/A')} - Fecha: {pago['fecha'].strftime('%d/%m/%Y %H:%M') if pago.get('fecha') else 'N/A'}\n"
+                if pago.get('caso'):
+                    contexto_texto += f"  - Caso: {pago['caso']}\n"
+                if pago.get('usuario'):
+                    contexto_texto += f"  - Usuario: {pago['usuario']}\n"
+            contexto_texto += "\n"
         
         return contexto_texto
     
@@ -367,6 +379,34 @@ FORMATO DE RESPUESTA:
             role = "user" if i % 2 == 0 else "assistant"
             mensajes.append({"role": role, "content": mensaje})
         return mensajes
+
+    def _normalizar_respuesta(self, texto: str) -> str:
+        """
+        Normaliza y mejora la forma de respuesta del asistente:
+        - Reduce saltos de línea excesivos
+        - Asegura que la respuesta esté en español y en formato claro (viñetas cuando procede)
+        - Provee un fallback cuando la respuesta es vacía o irrelevante
+        """
+        if not texto:
+            return "No se encontró información específica en la base de datos."
+
+        # Limpiar saltos de línea múltiples
+        import re
+        texto = re.sub(r"\n{3,}", "\n\n", texto).strip()
+
+        # Si la respuesta no tiene viñetas pero tiene varias oraciones, convertir oraciones en viñetas
+        if '•' not in texto and '\n' not in texto and texto.count('.') > 1:
+            partes = [p.strip() for p in texto.split('.') if p.strip()]
+            texto = '\n'.join([f"• {p}." for p in partes])
+
+        # Asegurar espacio consistente después de viñetas
+        texto = texto.replace('\n•', '\n\n•')
+
+        # Límite de seguridad: si la respuesta contiene 'No se encontró' explícitamente, devolver ese mensaje claro
+        if 'no se encontró' in texto.lower() or 'no se pudo' in texto.lower():
+            return texto
+
+        return texto
     
     def analizar_consulta(self, consulta: str) -> Dict[str, Any]:
         """

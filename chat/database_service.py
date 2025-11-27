@@ -6,6 +6,7 @@ from casos.models import Caso, Expediente, Carpeta
 from documentos.models import Documento, TipoDocumento, EtapaProcesal
 from actores.models import Actor, Abogado, Cliente, Asistente
 from seguridad.models import Usuario, Rol, Permiso
+from finanzas.models import Pago, Factura
 from typing import List, Dict, Any
 import re
 
@@ -26,6 +27,7 @@ class DatabaseQueryService:
             'casos': [],
             'documentos': [],
             'actores': [],
+            'pagos': [],
             'estadisticas': {},
             'respuesta_directa': None
         }
@@ -46,6 +48,11 @@ class DatabaseQueryService:
             resultados['casos'] = self._buscar_casos_general(consulta_lower)
             resultados['documentos'] = self._buscar_documentos_general(consulta_lower)
             resultados['actores'] = self._buscar_actores_general(consulta_lower)
+            # Búsqueda de pagos/facturas
+            try:
+                resultados['pagos'] = self._buscar_pagos_general(consulta_lower)
+            except Exception:
+                resultados['pagos'] = []
         
         return resultados
     
@@ -182,6 +189,15 @@ class DatabaseQueryService:
                 'inactivos': Usuario.objects.filter(is_active=False).count(),
                 'por_rol': list(Usuario.objects.values('groups__name').annotate(count=Count('username')))
             }
+
+        # Estadísticas de pagos
+        if any(palabra in consulta for palabra in ['pago', 'pagos', 'factura', 'facturas']):
+            stats['pagos'] = {
+                'total': Pago.objects.count(),
+                'completados': Pago.objects.filter(estado='COMPLETADO').count(),
+                'pendientes': Pago.objects.filter(estado='PENDIENTE').count(),
+                'fallidos': Pago.objects.filter(estado='FALLIDO').count(),
+            }
         
         return stats
     
@@ -232,6 +248,14 @@ class DatabaseQueryService:
             respuesta.append(f"• Total de usuarios: **{users_stats['total']}**")
             respuesta.append(f"• Activos: **{users_stats['activos']}**")
             respuesta.append(f"• Inactivos: **{users_stats['inactivos']}**")
+
+        if 'pagos' in stats:
+            pagos_stats = stats['pagos']
+            respuesta.append(f"\n💳 **Estadísticas de Pagos:**")
+            respuesta.append(f"• Total de pagos: **{pagos_stats['total']}**")
+            respuesta.append(f"• Completados: **{pagos_stats['completados']}**")
+            respuesta.append(f"• Pendientes: **{pagos_stats['pendientes']}**")
+            respuesta.append(f"• Fallidos: **{pagos_stats['fallidos']}**")
         
         return "\n".join(respuesta) if respuesta else "No se encontraron estadísticas relevantes."
     
@@ -257,6 +281,18 @@ class DatabaseQueryService:
             resultados['documentos'] = documentos
             if documentos and not resultados['respuesta_directa']:
                 resultados['respuesta_directa'] = self._formatear_documentos(documentos)
+
+        # Buscar pagos/especificaciones financieras
+        if any(pal in consulta for pal in ['pago', 'pagos', 'factura', 'facturas']):
+            pagos = self._buscar_pagos_especificos(consulta)
+            resultados['pagos'] = pagos
+            if pagos and not resultados['respuesta_directa']:
+                # Generar una respuesta directa simple
+                primera = pagos[0]
+                resultados['respuesta_directa'] = (
+                    f"💳 Pago encontrado: monto {primera['monto']} - estado {primera['estado']} - "
+                    f"caso {primera.get('caso') or 'N/A'}"
+                )
         
         # Buscar actores específicos
         if any(palabra in consulta for palabra in ['abogado', 'cliente', 'asistente', 'actor']):
@@ -406,6 +442,62 @@ class DatabaseQueryService:
             })
         
         return actores
+
+    def _buscar_pagos_especificos(self, consulta: str) -> List[Dict]:
+        """Busca pagos o facturas específicos"""
+        pagos = []
+
+        # Buscar por transacción externa
+        pagos_db = Pago.objects.none()
+        if 'transaccion' in consulta or 'transacción' in consulta or 'transaccion_id' in consulta:
+            # Buscar por transaccion_id_externo si aparece
+            match = re.search(r'[A-Za-z0-9_-]{6,}', consulta)
+            if match:
+                pagos_db = Pago.objects.filter(transaccion_id_externo__icontains=match.group())
+
+        # Buscar por número de caso
+        if not pagos_db.exists() and re.search(r'[a-z]+-\d{4}-\d+', consulta.lower()):
+            numero_match = re.search(r'[a-z]+-\d{4}-\d+', consulta.lower())
+            if numero_match:
+                pagos_db = Pago.objects.filter(caso__nroCaso__icontains=numero_match.group())
+
+        # Buscar por usuario
+        if not pagos_db.exists():
+            pagos_db = Pago.objects.filter(
+                Q(usuario__username__icontains=consulta) |
+                Q(usuario__email__icontains=consulta)
+            )[:10]
+
+        for pago in pagos_db:
+            pagos.append({
+                'id': pago.id,
+                'monto': float(pago.monto),
+                'fecha': pago.fecha_pago,
+                'metodo': pago.metodo_pago,
+                'estado': pago.estado,
+                'caso': pago.caso.nroCaso if pago.caso else None,
+                'usuario': pago.usuario.username if pago.usuario else None
+            })
+
+        return pagos
+
+    def _buscar_pagos_general(self, consulta: str) -> List[Dict]:
+        """Búsqueda general de pagos (recientes o por palabras clave)"""
+        pagos = []
+
+        pagos_db = Pago.objects.all().order_by('-fecha_pago')[:10]
+        for pago in pagos_db:
+            pagos.append({
+                'id': pago.id,
+                'monto': float(pago.monto),
+                'fecha': pago.fecha_pago,
+                'metodo': pago.metodo_pago,
+                'estado': pago.estado,
+                'caso': pago.caso.nroCaso if pago.caso else None,
+                'usuario': pago.usuario.username if pago.usuario else None
+            })
+
+        return pagos
     
     def _buscar_casos_general(self, consulta: str) -> List[Dict]:
         """Búsqueda general de casos"""
